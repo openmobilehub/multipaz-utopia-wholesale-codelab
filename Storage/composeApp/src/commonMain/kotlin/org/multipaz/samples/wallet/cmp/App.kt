@@ -26,6 +26,7 @@ import org.multipaz.crypto.EcCurve
 import org.multipaz.crypto.X500Name
 import org.multipaz.crypto.X509Cert
 import org.multipaz.crypto.X509CertChain
+import org.multipaz.document.Document
 import org.multipaz.document.DocumentStore
 import org.multipaz.document.buildDocumentStore
 import org.multipaz.documenttype.DocumentTypeRepository
@@ -60,6 +61,7 @@ class App() {
     lateinit var readerTrustManager: TrustManager
     lateinit var presentmentModel: PresentmentModel
     lateinit var presentmentSource: PresentmentSource
+    lateinit var document: Document
 
     private val initLock = Mutex()
     private var initialized = false
@@ -72,13 +74,18 @@ class App() {
             if (initialized) {
                 return
             }
-            storage = Platform.nonBackedUpStorage
-            secureArea = Platform.getSecureArea()
-            secureAreaRepository = SecureAreaRepository.Builder().add(secureArea).build()
+            //TODO : storage = Platform.nonBackedUpStorage
+
+            //TODO: secureArea = Platform.getSecureArea()
+
+            //TODO: secureAreaRepository = SecureAreaRepository.Builder().add(secureArea).build()
+
             documentTypeRepository = DocumentTypeRepository().apply {
                 addDocumentType(DrivingLicense.getDocumentType())
             }
-            documentStore = buildDocumentStore(storage = storage, secureAreaRepository = secureAreaRepository) {}
+
+            //TODO: documentStore = buildDocumentStore(storage = storage, secureAreaRepository = secureAreaRepository) {}
+
             if (documentStore.listDocuments().isEmpty()) {
                 Logger.i(appName,"create document")
                 val now = Clock.System.now()
@@ -111,12 +118,15 @@ class App() {
                         Res.drawable.profile,
                     )
                 )
-                val document = documentStore.createDocument(
-                    displayName ="Tom Lee's Utopia Membership",
-                    typeDisplayName = "Membership Card",
-                    cardArt = profile,
-                    other = UtopiaMemberInfo().toJsonString().encodeToByteString(),
-                )
+                //TODO: document = documentStore.createDocument(
+                //                    displayName ="Tom Lee's Utopia Membership",
+                //                    typeDisplayName = "Membership Card",
+                //                    cardArt = profile,
+                //                    other = UtopiaMemberInfo().toJsonString().encodeToByteString(),
+                //                )
+
+
+
                 val mdocCredential =
                     DrivingLicense.getDocumentType().createMdocCredentialWithSampleData(
                         document = document,
@@ -181,10 +191,12 @@ class App() {
             )
             if (DigitalCredentials.Default.available) {
                 //The credentials will still exist in your document store and can be used for other presentation mechanisms like proximity sharing (NFC/BLE), but they won't be accessible through the standardized digital credentials infrastructure that Android provides.
-                DigitalCredentials.Default.startExportingCredentials(
-                    documentStore = documentStore,
-                    documentTypeRepository = documentTypeRepository
-                )
+
+
+               //TODO:  DigitalCredentials.Default.startExportingCredentials(
+                //                    documentStore = documentStore,
+                //                    documentTypeRepository = documentTypeRepository
+                //                )
             }
             initialized = true
         }
