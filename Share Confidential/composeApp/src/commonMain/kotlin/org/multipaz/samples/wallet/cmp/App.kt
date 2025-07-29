@@ -77,6 +77,8 @@ import kotlin.time.Duration.Companion.days
 import utopiasample.composeapp.generated.resources.profile
 import org.jetbrains.compose.resources.getDrawableResourceBytes
 import org.jetbrains.compose.resources.getSystemResourceEnvironment
+import org.multipaz.crypto.EcPrivateKey
+import org.multipaz.crypto.EcPublicKey
 import org.multipaz.mdoc.transport.MdocTransport
 import org.multipaz.util.Logger
 
@@ -123,15 +125,13 @@ class App() {
                 val signedAt = now
                 val validFrom = now
                 val validUntil = now + 365.days
-                val iacaKey = Crypto.createEcPrivateKey(EcCurve.P256)
-                val iacaCert = MdocUtil.generateIacaCertificate(
-                    iacaKey = iacaKey,
-                    subject = X500Name.fromName(name = "CN=Test IACA Key"),
-                    serial = ASN1Integer.fromRandom(numBits = 128),
-                    validFrom = validFrom,
-                    validUntil = validUntil,
-                    issuerAltNameUrl = "https://issuer.example.com",
-                    crlUrl = "https://issuer.example.com/crl"
+                val iacaCert = X509Cert.fromPem(
+                    iaca_Cert
+                )
+                Logger.i(appName, iacaCert.toPem())
+                val iacaKey = EcPrivateKey.fromPem(
+                    iaca_private_key,
+                    iacaCert.ecPublicKey
                 )
                 val dsKey = Crypto.createEcPrivateKey(EcCurve.P256)
                 val dsCert = MdocUtil.generateDsCertificate(
@@ -383,7 +383,7 @@ class App() {
                 //TODO: val mdocUrl = "mdoc:" + deviceEngagement.value!!.toByteArray().toBase64Url()
 
                 //TODO:qrCodeBitmap = remember { generateQrCode(mdocUrl) }
-
+                Spacer(modifier = Modifier.height(128.dp))
                 Text(text = "Present QR code to mdoc reader")
                 Image(
                     modifier = Modifier.fillMaxWidth(),
