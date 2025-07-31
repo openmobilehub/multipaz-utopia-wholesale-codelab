@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import io.ktor.utils.io.core.toByteArray
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -76,6 +77,8 @@ import kotlin.time.Duration.Companion.days
 import utopiasample.composeapp.generated.resources.profile
 import org.jetbrains.compose.resources.getDrawableResourceBytes
 import org.jetbrains.compose.resources.getSystemResourceEnvironment
+import org.multipaz.crypto.EcPrivateKey
+import org.multipaz.crypto.EcPublicKey
 import org.multipaz.util.Logger
 
 /**
@@ -117,15 +120,13 @@ class App() {
                 val signedAt = now
                 val validFrom = now
                 val validUntil = now + 365.days
-                val iacaKey = Crypto.createEcPrivateKey(EcCurve.P256)
-                val iacaCert = MdocUtil.generateIacaCertificate(
-                    iacaKey = iacaKey,
-                    subject = X500Name.fromName(name = "CN=Test IACA Key"),
-                    serial = ASN1Integer.fromRandom(numBits = 128),
-                    validFrom = validFrom,
-                    validUntil = validUntil,
-                    issuerAltNameUrl = "https://issuer.example.com",
-                    crlUrl = "https://issuer.example.com/crl"
+                val iacaCert = X509Cert.fromPem(
+                    getIaca_Cert()
+                )
+                Logger.i(appName, iacaCert.toPem())
+                val iacaKey = EcPrivateKey.fromPem(
+                    iaca_private_key,
+                    iacaCert.ecPublicKey
                 )
                 val dsKey = Crypto.createEcPrivateKey(EcCurve.P256)
                 val dsCert = MdocUtil.generateDsCertificate(
@@ -172,21 +173,7 @@ class App() {
                 addTrustPoint(
                     TrustPoint(
                         certificate = X509Cert.fromPem(
-                            """
-                                -----BEGIN CERTIFICATE-----
-                                MIICUTCCAdegAwIBAgIQppKZHI1iPN290JKEA79OpzAKBggqhkjOPQQDAzArMSkwJwYDVQQDDCBP
-                                V0YgTXVsdGlwYXogVGVzdEFwcCBSZWFkZXIgUm9vdDAeFw0yNDEyMDEwMDAwMDBaFw0zNDEyMDEw
-                                MDAwMDBaMCsxKTAnBgNVBAMMIE9XRiBNdWx0aXBheiBUZXN0QXBwIFJlYWRlciBSb290MHYwEAYH
-                                KoZIzj0CAQYFK4EEACIDYgAE+QDye70m2O0llPXMjVjxVZz3m5k6agT+wih+L79b7jyqUl99sbeU
-                                npxaLD+cmB3HK3twkA7fmVJSobBc+9CDhkh3mx6n+YoH5RulaSWThWBfMyRjsfVODkosHLCDnbPV
-                                o4G/MIG8MA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEAMFYGA1UdHwRPME0wS6BJ
-                                oEeGRWh0dHBzOi8vZ2l0aHViLmNvbS9vcGVud2FsbGV0LWZvdW5kYXRpb24tbGFicy9pZGVudGl0
-                                eS1jcmVkZW50aWFsL2NybDAdBgNVHQ4EFgQUq2Ub4FbCkFPx3X9s5Ie+aN5gyfUwHwYDVR0jBBgw
-                                FoAUq2Ub4FbCkFPx3X9s5Ie+aN5gyfUwCgYIKoZIzj0EAwMDaAAwZQIxANN9WUvI1xtZQmAKS4/D
-                                ZVwofqLNRZL/co94Owi1XH5LgyiBpS3E8xSxE9SDNlVVhgIwKtXNBEBHNA7FKeAxKAzu4+MUf4gz
-                                8jvyFaE0EUVlS2F5tARYQkU6udFePucVdloi
-                                -----END CERTIFICATE-----
-                            """.trimIndent().trim()
+                            getReader_Root_Cert().trimIndent().trim()
                         ),
                         displayName = "OWF Multipaz TestApp",
                         displayIcon = null,
@@ -373,6 +360,7 @@ class App() {
             if (deviceEngagement.value != null) {
                 val mdocUrl = "mdoc:" + deviceEngagement.value!!.toByteArray().toBase64Url()
                 val qrCodeBitmap = remember { generateQrCode(mdocUrl) }
+                Spacer(modifier = Modifier.height(128.dp))
                 Text(text = "Present QR code to mdoc reader")
                 Image(
                     modifier = Modifier.fillMaxWidth(),
