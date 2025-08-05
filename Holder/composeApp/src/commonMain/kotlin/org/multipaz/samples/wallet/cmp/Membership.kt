@@ -1,6 +1,8 @@
 package org.multipaz.samples.wallet.cmp
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -10,10 +12,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.painterResource
@@ -30,12 +34,12 @@ fun MembershipCard() {
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        // Top blue card with profile
+        // Top blue card with membership details
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
-            color = Color(0xFF2E72B8),
+            color = Color(0xFF1976D2),
             shape = RoundedCornerShape(12.dp)
         ) {
             Row(
@@ -44,21 +48,29 @@ fun MembershipCard() {
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Tom\nLee",
-                        fontSize = 20.sp,
+                        text = "Wholesale Store",
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "14-09-23          2028-09-19",
+                        fontSize = 12.sp,
+                        color = Color.White
+                    )
+
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Member Card Type:\nPRIMARY",
-                        fontSize = 14.sp,
+                        text = "Tom\nLee",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "Member Number:\n801278123645",
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                         color = Color.White
                     )
                 }
@@ -70,7 +82,7 @@ fun MembershipCard() {
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .size(80.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(8.dp))
                 )
             }
         }
