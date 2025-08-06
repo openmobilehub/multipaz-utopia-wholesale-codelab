@@ -1,6 +1,7 @@
 package org.multipaz.samples.wallet.cmp
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,8 +9,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -19,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -228,61 +239,101 @@ class App() {
         }
 
         MaterialTheme {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                PromptDialogs(promptModel)
-                Spacer(modifier = Modifier.height(30.dp))
-                MembershipCard()
-            }
-            val coroutineScope = rememberCoroutineScope { promptModel }
-            val blePermissionState = rememberBluetoothPermissionState()
+            MainApp()
+        }
+    }
 
-            if (!blePermissionState.isGranted) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+    @Composable
+    private fun MainApp() {
+        val selectedTab = remember { mutableStateOf(0) }
+        val tabs = listOf("Explore", "Account")
+        val deviceEngagement = remember { mutableStateOf<ByteString?>(null) }
+        
+        Scaffold(
+            bottomBar = {
+                TabRow(
+                    selectedTabIndex = selectedTab.value,
+                    modifier = Modifier.background(Color.White)
                 ) {
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                blePermissionState.launchPermissionRequest()
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab.value == index,
+                            onClick = { selectedTab.value = index },
+                            text = { Text(title) },
+                            icon = {
+                                Icon(
+                                    imageVector = if (index == 0) Icons.Default.Explore else Icons.Default.AccountCircle,
+                                    contentDescription = title,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
-                        }
-                    ) {
-                        Text("Request BLE permissions")
-                    }
-                }
-            } else {
-                val deviceEngagement = remember { mutableStateOf<ByteString?>(null) }
-                val state = presentmentModel.state.collectAsState()
-                when (state.value) {
-                    PresentmentModel.State.IDLE -> {
-                        showQrButton(deviceEngagement)
-                    }
-
-                    PresentmentModel.State.CONNECTING -> {
-                        showQrCode(deviceEngagement)
-                    }
-
-                    PresentmentModel.State.WAITING_FOR_SOURCE,
-                    PresentmentModel.State.PROCESSING,
-                    PresentmentModel.State.WAITING_FOR_DOCUMENT_SELECTION,
-                    PresentmentModel.State.WAITING_FOR_CONSENT,
-                    PresentmentModel.State.COMPLETED -> {
-                        Presentment(
-                            appName = appName,
-                            appIconPainter = painterResource(appIcon),
-                            presentmentModel = presentmentModel,
-                            presentmentSource = presentmentSource,
-                            documentTypeRepository = documentTypeRepository,
-                            onPresentmentComplete = {
-                                presentmentModel.reset()
-                            },
                         )
                     }
+                }
+            }
+        ) { paddingValues ->
+            when (selectedTab.value) {
+                0 -> ExploreScreen(modifier = Modifier.padding(paddingValues))
+                1 -> AccountScreen(modifier = Modifier.padding(paddingValues), deviceEngagement = deviceEngagement)
+            }
+        }
+    }
+
+    @Composable
+    private fun AccountScreen(modifier: Modifier = Modifier, deviceEngagement: MutableState<ByteString?>) {
+        Column(
+            modifier = modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            PromptDialogs(promptModel)
+            Spacer(modifier = Modifier.height(30.dp))
+            MembershipCard()
+        }
+        val coroutineScope = rememberCoroutineScope { promptModel }
+        val blePermissionState = rememberBluetoothPermissionState()
+
+        if (!blePermissionState.isGranted) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            blePermissionState.launchPermissionRequest()
+                        }
+                    }
+                ) {
+                    Text("Request BLE permissions")
+                }
+            }
+        } else {
+            val state = presentmentModel.state.collectAsState()
+            when (state.value) {
+                PresentmentModel.State.IDLE -> {
+                    showQrButton(deviceEngagement)
+                }
+
+                PresentmentModel.State.CONNECTING -> {
+                    showQrCode(deviceEngagement)
+                }
+
+                PresentmentModel.State.WAITING_FOR_SOURCE,
+                PresentmentModel.State.PROCESSING,
+                PresentmentModel.State.WAITING_FOR_DOCUMENT_SELECTION,
+                PresentmentModel.State.WAITING_FOR_CONSENT,
+                PresentmentModel.State.COMPLETED -> {
+                    Presentment(
+                        appName = appName,
+                        appIconPainter = painterResource(appIcon),
+                        presentmentModel = presentmentModel,
+                        presentmentSource = presentmentSource,
+                        documentTypeRepository = documentTypeRepository,
+                        onPresentmentComplete = {
+                            presentmentModel.reset()
+                        },
+                    )
                 }
             }
         }
