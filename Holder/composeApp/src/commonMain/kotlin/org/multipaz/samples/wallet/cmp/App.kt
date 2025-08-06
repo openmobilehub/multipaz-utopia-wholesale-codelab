@@ -1,6 +1,7 @@
 package org.multipaz.samples.wallet.cmp
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,8 +9,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
@@ -19,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
@@ -246,8 +256,48 @@ class App() {
             }
             return
         }
-
         MaterialTheme {
+            MainApp()
+        }
+    }
+
+    @Composable
+    private fun MainApp() {
+        val selectedTab = remember { mutableStateOf(0) }
+        val tabs = listOf("Explore", "Account")
+        val deviceEngagement = remember { mutableStateOf<ByteString?>(null) }
+
+        Scaffold(
+            bottomBar = {
+                TabRow(
+                    selectedTabIndex = selectedTab.value,
+                    modifier = Modifier.background(Color.White)
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = selectedTab.value == index,
+                            onClick = { selectedTab.value = index },
+                            text = { Text(title) },
+                            icon = {
+                                Icon(
+                                    imageVector = if (index == 0) Icons.Default.Explore else Icons.Default.AccountCircle,
+                                    contentDescription = title,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+        ) { paddingValues ->
+            when (selectedTab.value) {
+                0 -> ExploreScreen(modifier = Modifier.padding(paddingValues))
+                1 -> AccountScreen(modifier = Modifier.padding(paddingValues), deviceEngagement = deviceEngagement)
+            }
+        }
+    }
+    @Composable
+    private fun AccountScreen(modifier: Modifier = Modifier, deviceEngagement: MutableState<ByteString?>) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -276,7 +326,6 @@ class App() {
                     }
                 }
             } else {
-                val deviceEngagement = remember { mutableStateOf<ByteString?>(null) }
                 val state = presentmentModel.state.collectAsState()
                 when (state.value) {
                     PresentmentModel.State.IDLE -> {
@@ -306,7 +355,7 @@ class App() {
                 }
             }
         }
-    }
+
 
     @Composable
     private fun showQrButton(showQrCode: MutableState<ByteString?>) {
