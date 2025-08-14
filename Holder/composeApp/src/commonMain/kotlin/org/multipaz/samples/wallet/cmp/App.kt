@@ -140,7 +140,7 @@ class App() {
                 )
                 Logger.i(appName, iacaCert.toPem())
                 val iacaKey = EcPrivateKey.fromPem(
-                    iaca_private_key,
+                    getIaca_Private_Key(),
                     iacaCert.ecPublicKey
                 )
                 val dsKey = Crypto.createEcPrivateKey(EcCurve.P256)
@@ -189,33 +189,19 @@ class App() {
                 addTrustPoint(
                     TrustPoint(
                         certificate = X509Cert.fromPem(
-                            """
-                                -----BEGIN CERTIFICATE-----
-                                MIICUTCCAdegAwIBAgIQppKZHI1iPN290JKEA79OpzAKBggqhkjOPQQDAzArMSkwJwYDVQQDDCBP
-                                V0YgTXVsdGlwYXogVGVzdEFwcCBSZWFkZXIgUm9vdDAeFw0yNDEyMDEwMDAwMDBaFw0zNDEyMDEw
-                                MDAwMDBaMCsxKTAnBgNVBAMMIE9XRiBNdWx0aXBheiBUZXN0QXBwIFJlYWRlciBSb290MHYwEAYH
-                                KoZIzj0CAQYFK4EEACIDYgAE+QDye70m2O0llPXMjVjxVZz3m5k6agT+wih+L79b7jyqUl99sbeU
-                                npxaLD+cmB3HK3twkA7fmVJSobBc+9CDhkh3mx6n+YoH5RulaSWThWBfMyRjsfVODkosHLCDnbPV
-                                o4G/MIG8MA4GA1UdDwEB/wQEAwIBBjASBgNVHRMBAf8ECDAGAQH/AgEAMFYGA1UdHwRPME0wS6BJ
-                                oEeGRWh0dHBzOi8vZ2l0aHViLmNvbS9vcGVud2FsbGV0LWZvdW5kYXRpb24tbGFicy9pZGVudGl0
-                                eS1jcmVkZW50aWFsL2NybDAdBgNVHQ4EFgQUq2Ub4FbCkFPx3X9s5Ie+aN5gyfUwHwYDVR0jBBgw
-                                FoAUq2Ub4FbCkFPx3X9s5Ie+aN5gyfUwCgYIKoZIzj0EAwMDaAAwZQIxANN9WUvI1xtZQmAKS4/D
-                                ZVwofqLNRZL/co94Owi1XH5LgyiBpS3E8xSxE9SDNlVVhgIwKtXNBEBHNA7FKeAxKAzu4+MUf4gz
-                                8jvyFaE0EUVlS2F5tARYQkU6udFePucVdloi
-                                -----END CERTIFICATE-----
-                            """.trimIndent().trim()
+                            getReader_Root_Cert().trimIndent().trim()
                         ),
-                        displayName = "OWF Multipaz TestApp",
+                        displayName = "OWF Multipaz Reader App",
                         displayIcon = null,
                         privacyPolicyUrl = "https://apps.multipaz.org"
                     )
                 )
                 addTrustPoint(
                     TrustPoint(
-                        certificate = X509Cert(
-                            "30820269308201efa0030201020210b7352f14308a2d40564006785270b0e7300a06082a8648ce3d0403033037310b300906035504060c0255533128302606035504030c1f76657269666965722e6d756c746970617a2e6f726720526561646572204341301e170d3235303631393232313633325a170d3330303631393232313633325a3037310b300906035504060c0255533128302606035504030c1f76657269666965722e6d756c746970617a2e6f7267205265616465722043413076301006072a8648ce3d020106052b81040022036200046baa02cc2f2b7c77f054e9907fcdd6c87110144f07acb2be371b2e7c90eb48580c5e3851bcfb777c88e533244069ff78636e54c7db5783edbc133cc1ff11bbabc3ff150f67392264c38710255743fee7cde7df6e55d7e9d5445d1bde559dcba8a381bf3081bc300e0603551d0f0101ff04040302010630120603551d130101ff040830060101ff02010030560603551d1f044f304d304ba049a047864568747470733a2f2f6769746875622e636f6d2f6f70656e77616c6c65742d666f756e646174696f6e2d6c6162732f6964656e746974792d63726564656e7469616c2f63726c301d0603551d0e04160414b18439852f4a6eeabfea62adbc51d081f7488729301f0603551d23041830168014b18439852f4a6eeabfea62adbc51d081f7488729300a06082a8648ce3d040303036800306502302a1f3bb0afdc31bcee73d3c5bf289245e76bd91a0fd1fb852b45fc75d3a98ba84430e6a91cbfc6b3f401c91382a43a64023100db22d2243644bb5188f2e0a102c0c167024fb6fe4a1d48ead55a6893af52367fb3cdbd66369aa689ecbeb5c84f063666".fromHex()
+                        certificate = X509Cert.fromPem(
+                            getReader_Root_Cert_for_untrust_device().trimIndent().trim()
                         ),
-                        displayName = "Multipaz Verifier",
+                        displayName = "OWF Multipaz Reader App",
                         displayIcon = null,
                         privacyPolicyUrl = "https://apps.multipaz.org"
                     )
@@ -432,7 +418,7 @@ class App() {
                 //TODO: val mdocUrl = "mdoc:" + deviceEngagement.value!!.toByteArray().toBase64Url()
 
                 //TODO:qrCodeBitmap = remember { generateQrCode(mdocUrl) }
-                Spacer(modifier = Modifier.height(128.dp))
+                Spacer(modifier = Modifier.height(256.dp))
                 Text(text = "Present QR code to mdoc reader")
                 Image(
                     modifier = Modifier.fillMaxWidth(),
