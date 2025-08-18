@@ -10,4 +10,4 @@ suspend fun getTestAppReaderRootCert(): String = Res.readBytes("files/test_app_r
 
 suspend fun getReaderRootCert(): String = Res.readBytes("files/reader_root_certificate.pem").decodeToString()
 
-suspend fun getReaderRootCertForuntrustdevice(): String = Res.readBytes("files/reader_root_certificate_for_untrust_device.pem").decodeToString()
+suspend fun getReaderRootCertForUntrustDevice(): String = Res.readBytes("files/reader_root_certificate_for_untrust_device.pem").decodeToString()

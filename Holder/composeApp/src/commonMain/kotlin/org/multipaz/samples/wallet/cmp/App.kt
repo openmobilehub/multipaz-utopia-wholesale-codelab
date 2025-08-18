@@ -199,7 +199,7 @@ class App() {
                 addTrustPoint(
                     TrustPoint(
                         certificate = X509Cert.fromPem(
-                            getReaderRootCertForuntrustdevice().trimIndent().trim()
+                            getReaderRootCertForUntrustDevice().trimIndent().trim()
                         ),
                         displayName = "OWF Multipaz Reader App",
                         displayIcon = null,
