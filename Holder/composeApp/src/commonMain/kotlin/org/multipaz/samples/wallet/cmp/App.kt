@@ -17,7 +17,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -33,7 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import io.ktor.utils.io.core.toByteArray
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -43,7 +41,6 @@ import kotlinx.datetime.Clock
 import kotlinx.io.bytestring.ByteString
 import kotlinx.io.bytestring.encodeToByteString
 import utopiasample.composeapp.generated.resources.Res
-import utopiasample.composeapp.generated.resources.compose_multiplatform
 import org.jetbrains.compose.resources.painterResource
 import org.multipaz.asn1.ASN1Integer
 import org.multipaz.cbor.Simple
@@ -82,14 +79,12 @@ import org.multipaz.trustmanagement.TrustManager
 import org.multipaz.trustmanagement.TrustPoint
 import org.multipaz.util.Platform
 import org.multipaz.util.UUID
-import org.multipaz.util.fromHex
 import org.multipaz.util.toBase64Url
 import kotlin.time.Duration.Companion.days
 import utopiasample.composeapp.generated.resources.profile
 import org.jetbrains.compose.resources.getDrawableResourceBytes
 import org.jetbrains.compose.resources.getSystemResourceEnvironment
 import org.multipaz.crypto.EcPrivateKey
-import org.multipaz.crypto.EcPublicKey
 import org.multipaz.util.Logger
 
 /**
@@ -132,11 +127,11 @@ class App() {
                 val validFrom = now
                 val validUntil = now + 365.days
                 val iacaCert = X509Cert.fromPem(
-                    getIaca_Cert()
+                    getIacaCert()
                 )
                 Logger.i(appName, iacaCert.toPem())
                 val iacaKey = EcPrivateKey.fromPem(
-                    getIaca_Private_Key(),
+                    getIacaPrivateKey(),
                     iacaCert.ecPublicKey
                 )
                 val dsKey = Crypto.createEcPrivateKey(EcCurve.P256)
@@ -184,7 +179,17 @@ class App() {
                 addTrustPoint(
                     TrustPoint(
                         certificate = X509Cert.fromPem(
-                            getReader_Root_Cert().trimIndent().trim()
+                            getTestAppReaderRootCert().trimIndent().trim()
+                        ),
+                        displayName = "OWF Multipaz Test App Reader",
+                        displayIcon = null,
+                        privacyPolicyUrl = "https://apps.multipaz.org"
+                    )
+                )
+                addTrustPoint(
+                    TrustPoint(
+                        certificate = X509Cert.fromPem(
+                            getReaderRootCert().trimIndent().trim()
                         ),
                         displayName = "OWF Multipaz Reader App",
                         displayIcon = null,
@@ -194,7 +199,7 @@ class App() {
                 addTrustPoint(
                     TrustPoint(
                         certificate = X509Cert.fromPem(
-                            getReader_Root_Cert_for_untrust_device().trimIndent().trim()
+                            getReaderRootCertForuntrustdevice().trimIndent().trim()
                         ),
                         displayName = "OWF Multipaz Reader App",
                         displayIcon = null,
