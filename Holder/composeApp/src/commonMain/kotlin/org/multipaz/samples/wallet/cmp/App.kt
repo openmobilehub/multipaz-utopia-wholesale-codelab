@@ -42,14 +42,12 @@ import kotlinx.datetime.Clock
 import kotlinx.io.bytestring.ByteString
 import kotlinx.io.bytestring.encodeToByteString
 import utopiasample.composeapp.generated.resources.Res
-import utopiasample.composeapp.generated.resources.compose_multiplatform
 import org.jetbrains.compose.resources.painterResource
 import org.multipaz.asn1.ASN1Integer
 import org.multipaz.cbor.Simple
 import org.multipaz.compose.permissions.rememberBluetoothPermissionState
 import org.multipaz.compose.presentment.Presentment
 import org.multipaz.compose.prompt.PromptDialogs
-import org.multipaz.compose.qrcode.generateQrCode
 import org.multipaz.crypto.Algorithm
 import org.multipaz.crypto.Crypto
 import org.multipaz.crypto.EcCurve
@@ -62,10 +60,6 @@ import org.multipaz.documenttype.DocumentTypeRepository
 import org.multipaz.documenttype.knowntypes.DrivingLicense
 import org.multipaz.mdoc.connectionmethod.MdocConnectionMethodBle
 import org.multipaz.mdoc.engagement.EngagementGenerator
-import org.multipaz.mdoc.role.MdocRole
-import org.multipaz.mdoc.transport.MdocTransportFactory
-import org.multipaz.mdoc.transport.MdocTransportOptions
-import org.multipaz.mdoc.transport.advertise
 import org.multipaz.mdoc.transport.waitForConnection
 import org.multipaz.mdoc.util.MdocUtil
 import org.multipaz.models.digitalcredentials.DigitalCredentials
@@ -81,14 +75,11 @@ import org.multipaz.trustmanagement.TrustManager
 import org.multipaz.trustmanagement.TrustPoint
 import org.multipaz.util.Platform
 import org.multipaz.util.UUID
-import org.multipaz.util.fromHex
-import org.multipaz.util.toBase64Url
 import kotlin.time.Duration.Companion.days
 import utopiasample.composeapp.generated.resources.profile
 import org.jetbrains.compose.resources.getDrawableResourceBytes
 import org.jetbrains.compose.resources.getSystemResourceEnvironment
 import org.multipaz.crypto.EcPrivateKey
-import org.multipaz.crypto.EcPublicKey
 import org.multipaz.mdoc.transport.MdocTransport
 import org.multipaz.util.Logger
 
@@ -136,11 +127,11 @@ class App() {
                 val validFrom = now
                 val validUntil = now + 365.days
                 val iacaCert = X509Cert.fromPem(
-                    getIaca_Cert()
+                    getIacaCert()
                 )
                 Logger.i(appName, iacaCert.toPem())
                 val iacaKey = EcPrivateKey.fromPem(
-                    getIaca_Private_Key(),
+                    getIacaPrivateKey(),
                     iacaCert.ecPublicKey
                 )
                 val dsKey = Crypto.createEcPrivateKey(EcCurve.P256)
@@ -189,7 +180,17 @@ class App() {
                 addTrustPoint(
                     TrustPoint(
                         certificate = X509Cert.fromPem(
-                            getReader_Root_Cert().trimIndent().trim()
+                            getTestAppReaderRootCert().trimIndent().trim()
+                        ),
+                        displayName = "OWF Test App Reader",
+                        displayIcon = null,
+                        privacyPolicyUrl = "https://apps.multipaz.org"
+                    )
+                )
+                addTrustPoint(
+                    TrustPoint(
+                        certificate = X509Cert.fromPem(
+                            getReaderRootCert().trimIndent().trim()
                         ),
                         displayName = "OWF Multipaz Reader App",
                         displayIcon = null,
@@ -199,7 +200,7 @@ class App() {
                 addTrustPoint(
                     TrustPoint(
                         certificate = X509Cert.fromPem(
-                            getReader_Root_Cert_for_untrust_device().trimIndent().trim()
+                            getReaderRootCertForUntrustDevice().trimIndent().trim()
                         ),
                         displayName = "OWF Multipaz Reader App",
                         displayIcon = null,
