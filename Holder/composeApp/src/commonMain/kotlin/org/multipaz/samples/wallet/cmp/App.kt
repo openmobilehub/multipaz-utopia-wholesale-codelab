@@ -38,54 +38,38 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
 import kotlinx.io.bytestring.ByteString
-import kotlinx.io.bytestring.encodeToByteString
-import utopiasample.composeapp.generated.resources.Res
 import org.jetbrains.compose.resources.painterResource
-import org.multipaz.asn1.ASN1Integer
 import org.multipaz.cbor.Simple
 import org.multipaz.compose.permissions.rememberBluetoothPermissionState
 import org.multipaz.compose.presentment.Presentment
 import org.multipaz.compose.prompt.PromptDialogs
-import org.multipaz.crypto.Algorithm
 import org.multipaz.crypto.Crypto
 import org.multipaz.crypto.EcCurve
-import org.multipaz.crypto.X500Name
 import org.multipaz.crypto.X509Cert
-import org.multipaz.crypto.X509CertChain
+import org.multipaz.document.Document
 import org.multipaz.document.DocumentStore
-import org.multipaz.document.buildDocumentStore
 import org.multipaz.documenttype.DocumentTypeRepository
-import org.multipaz.documenttype.knowntypes.DrivingLicense
 import org.multipaz.mdoc.connectionmethod.MdocConnectionMethodBle
 import org.multipaz.mdoc.engagement.EngagementGenerator
+import org.multipaz.mdoc.transport.MdocTransport
 import org.multipaz.mdoc.transport.waitForConnection
-import org.multipaz.mdoc.util.MdocUtil
 import org.multipaz.models.digitalcredentials.DigitalCredentials
 import org.multipaz.models.presentment.MdocPresentmentMechanism
 import org.multipaz.models.presentment.PresentmentModel
 import org.multipaz.models.presentment.PresentmentSource
 import org.multipaz.models.presentment.SimplePresentmentSource
-import org.multipaz.securearea.CreateKeySettings
 import org.multipaz.securearea.SecureArea
 import org.multipaz.securearea.SecureAreaRepository
 import org.multipaz.storage.Storage
-import org.multipaz.trustmanagement.TrustManager
-import org.multipaz.trustmanagement.TrustPoint
-import org.multipaz.util.Platform
-import org.multipaz.util.UUID
-import kotlin.time.Duration.Companion.days
-import utopiasample.composeapp.generated.resources.profile
-import org.jetbrains.compose.resources.getDrawableResourceBytes
-import org.jetbrains.compose.resources.getSystemResourceEnvironment
-import org.multipaz.crypto.EcPrivateKey
-import org.multipaz.mdoc.transport.MdocTransport
 import org.multipaz.trustmanagement.TrustManagerLocal
 import org.multipaz.trustmanagement.TrustMetadata
 import org.multipaz.trustmanagement.TrustPointAlreadyExistsException
 import org.multipaz.util.Logger
-import kotlin.time.Clock.System.now
+import org.multipaz.util.Platform
+import org.multipaz.util.UUID
+import utopiasample.composeapp.generated.resources.Res
+import utopiasample.composeapp.generated.resources.profile
 import kotlin.time.ExperimentalTime
 
 /**
@@ -105,7 +89,7 @@ class App() {
 
     lateinit var qrCodeBitmap: ImageBitmap
 
-    lateinit  var advertisedTransports: List<MdocTransport>
+    lateinit var advertisedTransports: List<MdocTransport>
 
     private val initLock = Mutex()
     private var initialized = false
@@ -119,121 +103,27 @@ class App() {
             if (initialized) {
                 return
             }
-            storage = Platform.nonBackedUpStorage
-            secureArea = Platform.getSecureArea()
-            secureAreaRepository = SecureAreaRepository.Builder().add(secureArea).build()
-            documentTypeRepository = DocumentTypeRepository().apply {
-                addDocumentType(DrivingLicense.getDocumentType())
-            }
-            documentStore = buildDocumentStore(storage = storage, secureAreaRepository = secureAreaRepository) {}
+            // TODO: initialize storage
+
+            // TODO: create secure area
+
+            // TODO: initialize secure area repository
+
+            // TODO: initialize the document store
+
             if (documentStore.listDocuments().isEmpty()) {
-                Logger.i(appName,"create document")
-                val now = now()
-                val signedAt = now
-                val validFrom = now
-                val validUntil = now + 365.days
-                val iacaCert = X509Cert.fromPem(
-                    Res.readBytes("files/iaca_certificate.pem").decodeToString()
-                )
-                Logger.i(appName, iacaCert.toPem())
-                val iacaKey = EcPrivateKey.fromPem(
-                    Res.readBytes("files/iaca_private_key.pem").decodeToString().trimIndent().trim(),
-                    iacaCert.ecPublicKey
-                )
-                val dsKey = Crypto.createEcPrivateKey(EcCurve.P256)
-                val dsCert = MdocUtil.generateDsCertificate(
-                    iacaCert = iacaCert,
-                    iacaKey = iacaKey,
-                    dsKey = dsKey.publicKey,
-                    subject = X500Name.fromName(name = "CN=Test DS Key"),
-                    serial = ASN1Integer.fromRandom(numBits = 128),
-                    validFrom = validFrom,
-                    validUntil = validUntil
-                )
-                val profile = ByteString(
-                    getDrawableResourceBytes(
-                        getSystemResourceEnvironment(),
-                        Res.drawable.profile,
-                    )
-                )
-                val document = documentStore.createDocument(
-                    displayName ="Tom Lee's Utopia Membership",
-                    typeDisplayName = "Membership Card",
-                    cardArt = profile,
-                    other = UtopiaMemberInfo().toJsonString().encodeToByteString(),
-                )
-                val mdocCredential =
-                    DrivingLicense.getDocumentType().createMdocCredentialWithSampleData(
-                        document = document,
-                        secureArea = secureArea,
-                        createKeySettings = CreateKeySettings(
-                            algorithm = Algorithm.ESP256,
-                            nonce = "Challenge".encodeToByteString(),
-                            userAuthenticationRequired = true
-                        ),
-                        dsKey = dsKey,
-                        dsCertChain = X509CertChain(listOf(dsCert)),
-                        signedAt = signedAt,
-                        validFrom = validFrom,
-                        validUntil = validUntil,
-                    )
-            }else{
-                Logger.i(appName,"document already exists")
-            }
-            //TODO: presentmentModel = PresentmentModel().apply { setPromptModel(promptModel) }
+                Logger.i(appName, "creating document")
+                // TODO: create a simple document
 
-            readerTrustManager = TrustManagerLocal(storage = storage, identifier = "reader")
-            try {
-                readerTrustManager.apply{
-                    addX509Cert(
-                        certificate = X509Cert.fromPem(
-                            Res.readBytes("files/test_app_reader_root_certificate.pem").decodeToString().trimIndent().trim()
-                        ),
-                        metadata = TrustMetadata(
-                            displayName = "OWF Multipaz Test App Reader",
-                            displayIcon = null,
-                            privacyPolicyUrl = "https://apps.multipaz.org"
-                        )
-                    )
-                    addX509Cert(
-                        certificate = X509Cert.fromPem(
-                            Res.readBytes("files/reader_root_certificate.pem").decodeToString().trimIndent().trim(),
-                        ),
-                        metadata = TrustMetadata(
-                            displayName = "Multipaz Identity Reader (Trusted Devices)",
-                            displayIcon = null,
-                            privacyPolicyUrl = "https://apps.multipaz.org"
-                        )
-                    )
-                    addX509Cert(
-                        certificate = X509Cert.fromPem(
-                            Res.readBytes("files/reader_root_certificate_for_untrust_device.pem").decodeToString().trimIndent().trim(),
-                        ),
-                        metadata = TrustMetadata(
-                            displayName = "Multipaz Identity Reader (UnTrusted Devices)",
-                            displayIcon = null,
-                            privacyPolicyUrl = "https://apps.multipaz.org"
-                        )
-                    )
-                }
-            } catch (e: TrustPointAlreadyExistsException) {
-                e.printStackTrace()
+            } else {
+                Logger.i(appName, "document already exists")
             }
 
-            presentmentSource = SimplePresentmentSource(
-                documentStore = documentStore,
-                documentTypeRepository = documentTypeRepository,
-                readerTrustManager = readerTrustManager,
-                preferSignatureToKeyAgreement = true,
-                domainMdocSignature = "mdoc",
-            )
-            if (DigitalCredentials.Default.available) {
-                //The credentials will still exist in your document store and can be used for other presentation mechanisms like proximity sharing (NFC/BLE), but they won't be accessible through the standardized digital credentials infrastructure that Android provides.
-                DigitalCredentials.Default.startExportingCredentials(
-                    documentStore = documentStore,
-                    documentTypeRepository = documentTypeRepository
-                )
-            }
+            // TODO: fetch and list documents
+
+            // Logger.i(appName, "document store contains ${documents.size} documents")
+            // Logger.i(appName, "document name: ${documents.get(0).metadata.displayName}")
+
             initialized = true
         }
     }
@@ -291,69 +181,76 @@ class App() {
         ) { paddingValues ->
             when (selectedTab.value) {
                 0 -> ExploreScreen(modifier = Modifier.padding(paddingValues))
-                1 -> AccountScreen(modifier = Modifier.padding(paddingValues), deviceEngagement = deviceEngagement)
+                1 -> AccountScreen(
+                    modifier = Modifier.padding(paddingValues),
+                    deviceEngagement = deviceEngagement
+                )
             }
         }
     }
+
     @Composable
-    private fun AccountScreen(modifier: Modifier = Modifier, deviceEngagement: MutableState<ByteString?>) {
+    private fun AccountScreen(
+        modifier: Modifier = Modifier,
+        deviceEngagement: MutableState<ByteString?>
+    ) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            PromptDialogs(promptModel)
+            Spacer(modifier = Modifier.height(30.dp))
+            MembershipCard()
+        }
+        val coroutineScope = rememberCoroutineScope { promptModel }
+        val blePermissionState = rememberBluetoothPermissionState()
+
+        if (!blePermissionState.isGranted) {
             Column(
                 modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                PromptDialogs(promptModel)
-                Spacer(modifier = Modifier.height(30.dp))
-                MembershipCard()
-            }
-            val coroutineScope = rememberCoroutineScope { promptModel }
-            val blePermissionState = rememberBluetoothPermissionState()
-
-            if (!blePermissionState.isGranted) {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                blePermissionState.launchPermissionRequest()
-                            }
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            blePermissionState.launchPermissionRequest()
                         }
-                    ) {
-                        Text("Request BLE permissions")
                     }
+                ) {
+                    Text("Request BLE permissions")
                 }
-            } else {
-                val state = presentmentModel.state.collectAsState()
-                when (state.value) {
-                    PresentmentModel.State.IDLE -> {
-                        showQrButton(deviceEngagement)
-                    }
+            }
+        } else {
+            val state = presentmentModel.state.collectAsState()
+            when (state.value) {
+                PresentmentModel.State.IDLE -> {
+                    showQrButton(deviceEngagement)
+                }
 
-                    PresentmentModel.State.CONNECTING -> {
-                        showQrCode(deviceEngagement)
-                    }
+                PresentmentModel.State.CONNECTING -> {
+                    showQrCode(deviceEngagement)
+                }
 
-                    PresentmentModel.State.WAITING_FOR_SOURCE,
-                    PresentmentModel.State.PROCESSING,
-                    PresentmentModel.State.WAITING_FOR_DOCUMENT_SELECTION,
-                    PresentmentModel.State.WAITING_FOR_CONSENT,
-                    PresentmentModel.State.COMPLETED -> {
-                        Presentment(
-                            appName = appName,
-                            appIconPainter = painterResource(appIcon),
-                            presentmentModel = presentmentModel,
-                            presentmentSource = presentmentSource,
-                            documentTypeRepository = documentTypeRepository,
-                            onPresentmentComplete = {
-                                presentmentModel.reset()
-                            },
-                        )
-                    }
+                PresentmentModel.State.WAITING_FOR_SOURCE,
+                PresentmentModel.State.PROCESSING,
+                PresentmentModel.State.WAITING_FOR_DOCUMENT_SELECTION,
+                PresentmentModel.State.WAITING_FOR_CONSENT,
+                PresentmentModel.State.COMPLETED -> {
+                    Presentment(
+                        appName = appName,
+                        appIconPainter = painterResource(appIcon),
+                        presentmentModel = presentmentModel,
+                        presentmentSource = presentmentSource,
+                        documentTypeRepository = documentTypeRepository,
+                        onPresentmentComplete = {
+                            presentmentModel.reset()
+                        },
+                    )
                 }
             }
         }
+    }
 
 
     @Composable
@@ -416,7 +313,8 @@ class App() {
                 text = "The mDL is also available\n" +
                         "via NFC engagement and W3C DC API\n" +
                         "(Android-only right now)",
-                textAlign = TextAlign.Center)
+                textAlign = TextAlign.Center
+            )
         }
     }
 
